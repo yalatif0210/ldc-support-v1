@@ -47,7 +47,7 @@ services:
     container_name: support_bot
     restart: unless-stopped
     depends_on:
-      db:
+      support_db:
         condition: service_healthy
     env_file:
       - .env
