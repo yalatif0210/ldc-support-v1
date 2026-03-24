@@ -182,6 +182,11 @@ def start_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     if request.agent_role == AgentRole.AGENT.value and ticket.agent_id != request.agent_id:
         return jsonify({'error': 'Accès refusé'}), 403
+    if ticket.agent_id is None:
+        agent = Agent.query.get(request.agent_id)
+        if agent:
+            ticket.agent_id = agent.id
+            agent.current_ticket_count += 1
     ticket_service.start_ticket(ticket)
     return jsonify({'message': 'Prise en charge confirmée', 'ticket': ticket.to_dict()})
 
