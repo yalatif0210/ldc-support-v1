@@ -84,7 +84,7 @@ class TicketService:
 
     def _get_available_agent(self) -> Agent | None:
         candidates = Agent.query.filter_by(is_active=True, status=AgentStatus.AVAILABLE).all()
-        eligible = [a for a in candidates if a.is_within_schedule and a.has_capacity]
+        eligible = [a for a in candidates if a.has_capacity]
         if not eligible:
             return None
         return min(eligible, key=lambda a: a.current_ticket_count)
@@ -98,7 +98,7 @@ class TicketService:
     # ── File d'attente ────────────────────────────────────────────────────────
 
     def _try_dequeue(self, agent: Agent):
-        if not agent.is_truly_available:
+        if not (agent.is_active and agent.status == AgentStatus.AVAILABLE and agent.has_capacity):
             return
         queued_tickets = (
             Ticket.query
