@@ -32,7 +32,7 @@ class TicketService:
         ticket = Ticket(
             ticket_ref=generate_ticket_ref(),
             client_name=client_name,
-            client_whatsapp=str(client_chat_id),  # On réutilise le champ pour le chat_id
+            client_whatsapp=str(client_chat_id),
             category=category,
             description=description,
             priority=assign_priority(category),
@@ -132,53 +132,57 @@ class TicketService:
     def _notify_agent(self, agent: Agent, ticket: Ticket):
         if not agent.telegram_chat_id:
             return
-        p_emoji = {TicketPriority.HIGH: '🔴', TicketPriority.MEDIUM: '🟡', TicketPriority.LOW: '🟢'}.get(ticket.priority, '⚪')
+        p_emoji = {
+            TicketPriority.HIGH: '🔴',
+            TicketPriority.MEDIUM: '🟡',
+            TicketPriority.LOW: '🟢'
+        }.get(ticket.priority, '⚪')
         msg = (
-            f"🆕 *Nouveau Ticket Assigné*\n"
+            f"🆕 <b>Nouveau Ticket Assigné</b>\n"
             f"{'─'*28}\n"
-            f"🔖 Réf : `{ticket.ticket_ref}`\n"
-            f"👤 Client : {ticket.client_name}\n"
+            f"🔖 Réf : <code>{ticket.ticket_ref}</code>\n"
+            f"👤 Établissement : {ticket.client_name}\n"
             f"📂 Catégorie : {ticket.category}\n"
             f"{p_emoji} Priorité : {ticket.priority.value.upper()}\n"
             f"{'─'*28}\n"
-            f"📝 *Description :*\n{ticket.description}\n"
+            f"📝 <b>Description :</b>\n{ticket.description}\n"
             f"{'─'*28}\n"
             f"🕐 Créé le : {ticket.created_at.strftime('%d/%m/%Y à %H:%M')}\n\n"
-            f"Pour prendre en charge : /prendre\\_{ticket.ticket_ref}\n"
-            f"Pour fermer : /fermer\\_{ticket.ticket_ref}"
+            f"Pour prendre en charge : /prendre_{ticket.ticket_ref}\n"
+            f"Pour fermer : /fermer_{ticket.ticket_ref}"
         )
         self._send_telegram(agent.telegram_chat_id, msg)
 
     def _notify_client_queued(self, ticket: Ticket):
         msg = (
-            f"🕐 *Votre demande a bien été enregistrée\\.*\n\n"
-            f"🔖 Référence : `{ticket.ticket_ref}`\n"
+            f"🕐 <b>Votre demande a bien été enregistrée.</b>\n\n"
+            f"🔖 Référence : <code>{ticket.ticket_ref}</code>\n"
             f"📂 Catégorie : {ticket.category}\n\n"
-            "Tous nos agents sont actuellement indisponibles\\. "
-            "Votre ticket est en *file d'attente* et sera pris en charge "
-            "dès qu'un agent sera disponible\\.\n\n"
-            "Vous recevrez une notification à ce moment\\-là\\. 🔔"
+            "Tous nos agents sont actuellement indisponibles. "
+            "Votre ticket est en <b>file d'attente</b> et sera pris en charge "
+            "dès qu'un agent sera disponible.\n\n"
+            "Vous recevrez une notification à ce moment là. 🔔"
         )
         self._send_telegram(ticket.client_whatsapp, msg)
 
     def _notify_client_in_progress(self, ticket: Ticket, agent: Agent):
         msg = (
-            f"🔵 *Votre demande est prise en charge \\!*\n\n"
-            f"🔖 Référence : `{ticket.ticket_ref}`\n"
-            f"👨‍💼 Agent : *{agent.name}*\n"
+            f"🔵 <b>Votre demande est prise en charge !</b>\n\n"
+            f"🔖 Référence : <code>{ticket.ticket_ref}</code>\n"
+            f"👨‍💼 Agent : <b>{agent.name}</b>\n"
             f"📂 Catégorie : {ticket.category}\n\n"
-            "Votre dossier est en cours de traitement\\. "
-            "Nous revenons vers vous dans les plus brefs délais\\."
+            "Votre dossier est en cours de traitement. "
+            "Nous revenons vers vous dans les plus brefs délais."
         )
         self._send_telegram(ticket.client_whatsapp, msg)
 
     def _notify_client_closed(self, ticket: Ticket):
         msg = (
-            f"✅ *Votre ticket a été résolu \\!*\n\n"
-            f"🔖 Référence : `{ticket.ticket_ref}`\n"
+            f"✅ <b>Votre ticket a été résolu !</b>\n\n"
+            f"🔖 Référence : <code>{ticket.ticket_ref}</code>\n"
             f"📂 Catégorie : {ticket.category}\n\n"
-            "Merci d'avoir contacté notre support\\.\n"
-            "Tapez /start si vous avez besoin d'aide supplémentaire\\."
+            "Merci d'avoir contacté notre support.\n"
+            "Tapez /start si vous avez besoin d'aide supplémentaire."
         )
         self._send_telegram(ticket.client_whatsapp, msg)
 
@@ -189,12 +193,12 @@ class TicketService:
             payload = {
                 'chat_id': chat_id,
                 'text': text,
-                'parse_mode': 'MarkdownV2'
+                'parse_mode': 'HTML'
             }
             resp = httpx.post(url, json=payload, timeout=10)
             if resp.status_code != 200:
-                print(f"❌ Telegram error: {resp.text} - ticket_service.py:196")
+                print(f"❌ Telegram error: {resp.text} - ticket_service.py:200")
             else:
-                print(f"✅ Message Telegram envoyé à {chat_id} - ticket_service.py:198")
+                print(f"✅ Message Telegram envoyé à {chat_id} - ticket_service.py:202")
         except Exception as e:
-            print(f"❌ Erreur envoi Telegram à {chat_id}: {e} - ticket_service.py:200")
+            print(f"❌ Erreur envoi Telegram à {chat_id}: {e} - ticket_service.py:204")
