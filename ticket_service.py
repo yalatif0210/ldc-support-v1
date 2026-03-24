@@ -58,8 +58,6 @@ class TicketService:
     # ── Prise en charge ───────────────────────────────────────────────────────
 
     def start_ticket(self, ticket: Ticket) -> Ticket:
-        if ticket.status == TicketStatus.IN_PROGRESS:
-            return ticket
         ticket.status = TicketStatus.IN_PROGRESS
         ticket.queued = False
         ticket.updated_at = datetime.utcnow()
@@ -197,8 +195,8 @@ class TicketService:
             }
             resp = httpx.post(url, json=payload, timeout=10)
             if resp.status_code != 200:
-                print(f"❌ Telegram error: {resp.text} - ticket_service.py:200")
+                print(f"❌ Telegram error: {resp.text} - ticket_service.py:198")
             else:
-                print(f"✅ Message Telegram envoyé à {chat_id} - ticket_service.py:202")
+                print(f"✅ Message Telegram envoyé à {chat_id} - ticket_service.py:200")
         except Exception as e:
-            print(f"❌ Erreur envoi Telegram à {chat_id}: {e} - ticket_service.py:204")
+            print(f"❌ Erreur envoi Telegram à {chat_id}: {e} - ticket_service.py:202")
