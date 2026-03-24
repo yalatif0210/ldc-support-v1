@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-LABEL maintainer="support@votreentreprise.com"
+LABEL maintainer="support@ldc.lhspla-ci.org"
 LABEL description="WhatsApp Support Bot - Flask API"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -18,10 +18,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p /app/qr_codes
 
+# Rendre le script exécutable
+RUN chmod +x /app/entrypoint.sh
+
 RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
+# Utiliser l'entrypoint qui init la DB puis lance Gunicorn
+CMD ["/app/entrypoint.sh"]
