@@ -73,19 +73,19 @@ class ReminderScheduler:
         if not self.manager_chat_id:
             return
         msg = (
-            f"🚨 *ESCALADE — Ticket non résolu*\n"
-            f"🔖 Réf : `{ticket.ticket_ref}`\n"
+            f"🚨 <b>ESCALADE — Ticket non résolu</b>\n"
+            f"🔖 Réf : <code>{ticket.ticket_ref}</code>\n"
             f"👤 Client : {ticket.client_name}\n"
             f"🔴 Priorité : {ticket.priority.value.upper()}\n"
             f"👨‍💼 Agent : {ticket.agent.name if ticket.agent else '⚠️ NON ASSIGNÉ'}\n"
-            f"⏱️ En attente depuis *{hours_elapsed}h*"
+            f"⏱️ En attente depuis <b>{hours_elapsed}h</b>"
         )
         self._send_telegram(self.manager_chat_id, msg)
 
     def _send_telegram(self, chat_id, text):
         try:
             httpx.post(f"{self.api_url}/sendMessage",
-                      json={'chat_id': chat_id, 'text': text, 'parse_mode': 'MarkdownV2'},
+                      json={'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'},
                       timeout=10)
         except Exception as e:
             print(f"❌ Erreur relance Telegram: {e} - scheduler.py:91")

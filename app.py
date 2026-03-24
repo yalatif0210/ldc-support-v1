@@ -90,7 +90,7 @@ def telegram_webhook():
     try:
         httpx.post(
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-            json={'chat_id': chat_id, 'text': reply, 'parse_mode': 'MarkdownV2'},
+            json={'chat_id': chat_id, 'text': reply, 'parse_mode': 'HTML'},
             timeout=10
         )
     except Exception as e:
