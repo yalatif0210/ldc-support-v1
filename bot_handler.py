@@ -16,9 +16,9 @@ CATEGORIES = {
 CATEGORY_MENU = (
     "Choisissez la catégorie de votre demande :\n\n"
     "1️⃣  Problème technique\n"
-    "2️⃣  Facturation\n"
+    "2️⃣  Coaching\n"
     "3️⃣  Compte utilisateur\n"
-    "4️⃣  Livraison / Commande\n"
+    "4️⃣  Rapport hebdomadaire\n"
     "5️⃣  Autre\n\n"
     "Répondez avec le numéro (1 à 5) :"
 )
@@ -27,7 +27,7 @@ WELCOME_MSG = (
     "👋 Bonjour ! Bienvenue au *Support Client*.\n\n"
     "Je vais vous aider à créer une demande d'assistance.\n\n"
     "Tapez /start pour recommencer à tout moment.\n\n"
-    "Pour commencer, quel est votre *nom complet* ?"
+    "Pour commencer, quel est votre *structure* ?"
 )
 
 AGENT_HELP_MSG = (
@@ -205,7 +205,7 @@ class BotHandler:
         data = conv.temp_data
         return (
             "📋 *Récapitulatif de votre demande :*\n\n"
-            f"👤 Nom : *{data.get('client_name')}*\n"
+            f"👤 Structure : *{data.get('client_name')}*\n"
             f"📂 Catégorie : *{data.get('category')}*\n"
             f"📝 Description : {data.get('description')}\n\n"
             "Confirmez\\-vous cette demande \\?\n"
