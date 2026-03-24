@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask import send_from_directory
 from flask_cors import CORS
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
@@ -23,6 +24,13 @@ ticket_service = TicketService(db, twilio_client)
 bot_handler = BotHandler(db, ticket_service)
 reminder_scheduler = ReminderScheduler(app, db, twilio_client)
 reminder_scheduler.set_ticket_service(ticket_service)
+
+# -- Static files (dashboard) --
+
+@app.route('/dashboard/')
+@app.route('/dashboard')
+def dashboard():
+    return send_from_directory('/app/dashboard', 'index.html')
 
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
