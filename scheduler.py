@@ -1,4 +1,3 @@
-cat > /opt/ldc-support-v1/scheduler.py << 'EOF'
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from datetime import datetime, timedelta
@@ -28,7 +27,7 @@ class ReminderScheduler:
 
     def start(self):
         self.scheduler.start()
-        print("✅ Scheduler démarré. - scheduler.py:31")
+        print("✅ Scheduler démarré. - scheduler.py:30")
 
     def stop(self):
         self.scheduler.shutdown()
@@ -89,6 +88,4 @@ class ReminderScheduler:
                       json={'chat_id': chat_id, 'text': text, 'parse_mode': 'MarkdownV2'},
                       timeout=10)
         except Exception as e:
-            print(f"❌ Erreur relance Telegram: {e} - scheduler.py:92")
-EOF
-echo "ok"
+            print(f"❌ Erreur relance Telegram: {e} - scheduler.py:91")
