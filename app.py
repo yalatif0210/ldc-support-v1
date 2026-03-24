@@ -254,6 +254,14 @@ def change_password(agent_id):
     return jsonify({'message': 'Mot de passe mis à jour'})
 
 
+@app.route('/api/qr-info', methods=['GET'])
+@require_auth
+def qr_info():
+    bot_username = os.getenv('TELEGRAM_BOT_USERNAME', '')
+    url = f"https://t.me/{bot_username}" if bot_username else ''
+    return jsonify({'qr_data': url, 'bot_username': bot_username})
+
+
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
 @app.route('/dashboard/')

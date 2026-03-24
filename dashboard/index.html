@@ -111,9 +111,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .stat.p .stat-v{color:var(--purple);}
 
 /* Filters */
-.filters{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+.filters{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btns{display:flex;gap:7px;flex-wrap:wrap;}
 .fb{padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .15s;}
 .fb:hover,.fb.active{border-color:var(--accent);color:var(--accent);background:rgba(37,211,102,.06);}
+.search-input{padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;min-width:220px;transition:border-color .2s;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--muted);}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--muted);}
+.pg-btns{display:flex;gap:4px;align-items:center;}
+.pgb{padding:4px 9px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s;}
+.pgb:hover:not(:disabled),.pgb.active{border-color:var(--accent);color:var(--accent);background:rgba(37,211,102,.06);}
+.pgb:disabled{opacity:.3;cursor:default;}
 
 /* Table */
 .tw{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
@@ -296,11 +305,14 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
         <div class="stat p" id="stat-queued-card" style="display:none"><div class="stat-l">En attente</div><div class="stat-v" id="s-queued">—</div></div>
       </div>
       <div class="filters">
-        <button class="fb active" onclick="filterBy('all',this)">Tous</button>
-        <button class="fb" onclick="filterBy('open',this)">🟡 Ouverts</button>
-        <button class="fb" onclick="filterBy('in_progress',this)">🔵 En cours</button>
-        <button class="fb" onclick="filterBy('closed',this)">✅ Fermés</button>
-        <button class="fb" onclick="filterBy('high',this)">🔴 Haute priorité</button>
+        <div class="filter-btns">
+          <button class="fb active" onclick="filterBy('all',this)">Tous</button>
+          <button class="fb" onclick="filterBy('open',this)">🟡 Ouverts</button>
+          <button class="fb" onclick="filterBy('in_progress',this)">🔵 En cours</button>
+          <button class="fb" onclick="filterBy('closed',this)">✅ Fermés</button>
+          <button class="fb" onclick="filterBy('high',this)">🔴 Haute priorité</button>
+        </div>
+        <input class="search-input" id="client-search" placeholder="🔍 Rechercher un client..." oninput="applyFilters()">
       </div>
       <div class="tw">
         <div id="t-loading" class="loading"><div class="spinner"></div> Chargement...</div>
@@ -309,6 +321,10 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
           <tbody id="t-body"></tbody>
         </table>
         <div id="t-empty" class="empty" style="display:none"><div class="empty-icon">🎫</div>Aucun ticket trouvé</div>
+        <div class="pagination" id="t-pagination" style="display:none">
+          <span id="pg-info"></span>
+          <div class="pg-btns" id="pg-btns"></div>
+        </div>
       </div>
     </div>
 
@@ -327,13 +343,13 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
 
     <!-- AGENTS (admin) -->
     <div class="page" id="page-agents">
-      <div class="ph"><h1>Agents <span>& disponibilité</span></h1></div>
+      <div class="ph"><h1>Agents <span>& disponibilité</span></h1><button class="btn btn-primary" onclick="openCreateAgent()">+ Nouvel agent</button></div>
       <div class="ag" id="agents-grid"><div class="loading"><div class="spinner"></div> Chargement...</div></div>
     </div>
 
     <!-- QR CODE -->
     <div class="page" id="page-qr">
-      <div class="ph"><h1>Accès <span>Bot WhatsApp</span></h1></div>
+      <div class="ph"><h1>Accès <span>Bot Telegram</span></h1></div>
       <div class="qr-grid">
         <div class="qr-card">
           <h3>📱 QR Code d'accès</h3>
@@ -344,14 +360,14 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
         <div class="qr-info">
           <h3>Comment le client accède au bot ?</h3>
           <ul class="steps">
-            <li class="step"><div class="sn">1</div><div class="st">Le client <strong>scanne ce QR code</strong> ou clique sur le lien partagé.</div></li>
-            <li class="step"><div class="sn">2</div><div class="st">WhatsApp s'ouvre avec un <strong>message pré-rempli</strong>.</div></li>
-            <li class="step"><div class="sn">3</div><div class="st">Le bot guide en <strong>5 étapes</strong> guidées.</div></li>
+            <li class="step"><div class="sn">1</div><div class="st">Le client <strong>scanne ce QR code</strong> ou clique sur le lien <strong>t.me/…</strong> partagé.</div></li>
+            <li class="step"><div class="sn">2</div><div class="st"><strong>Telegram s'ouvre</strong> directement sur la conversation avec le bot.</div></li>
+            <li class="step"><div class="sn">3</div><div class="st">Le client tape <strong>/start</strong> — le bot guide en <strong>5 étapes</strong>.</div></li>
             <li class="step"><div class="sn">4</div><div class="st">Si un agent est disponible → <strong>assignation immédiate</strong> + notification client.</div></li>
             <li class="step"><div class="sn">5</div><div class="st">Sinon → ticket en <strong>file d'attente</strong>, client notifié à la prise en charge.</div></li>
           </ul>
           <hr class="sep">
-          <div class="warn"><div class="warn-t">⚠ SANDBOX TWILIO</div><div class="warn-b">En mode test, chaque client doit d'abord envoyer le code de jonction Twilio. Cette étape disparaît avec un numéro WhatsApp Business approuvé.</div></div>
+          <div class="warn"><div class="warn-t">ℹ CONFIGURATION AGENT</div><div class="warn-b">Pour recevoir les tickets, chaque agent doit avoir son <strong>Telegram Chat ID</strong> configuré dans son profil. L'agent peut l'obtenir en envoyant /start au bot <strong>@userinfobot</strong> sur Telegram.</div></div>
         </div>
       </div>
     </div>
@@ -411,6 +427,10 @@ const API = '/support/api';
 let token = localStorage.getItem('sb_token');
 let currentUser = JSON.parse(localStorage.getItem('sb_user') || 'null');
 let allTickets = [];
+let filteredTickets = [];
+let currentFilter = 'all';
+let currentPage = 1;
+const PAGE_SIZE = 20;
 
 const COLORS = ['#25d366','#3d9cf5','#ffa502','#ff4757','#a78bfa','#38bdf8','#f97316'];
 const avatarColor = n => COLORS[n.charCodeAt(0) % COLORS.length];
@@ -506,20 +526,34 @@ async function loadTickets() {
   document.getElementById('t-loading').style.display='flex';
   document.getElementById('t-table').style.display='none';
   document.getElementById('t-empty').style.display='none';
+  document.getElementById('t-pagination').style.display='none';
   const r = await api('/tickets'); if(!r) return;
   allTickets = await r.json();
-  renderTickets(allTickets);
+  currentPage = 1;
+  applyFilters();
   document.getElementById('t-loading').style.display='none';
 }
 
 function renderTickets(list) {
-  if (!list.length) { document.getElementById('t-empty').style.display='block'; document.getElementById('t-table').style.display='none'; return; }
+  const total = list.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = list.slice(start, start + PAGE_SIZE);
+
+  if (!total) {
+    document.getElementById('t-empty').style.display='block';
+    document.getElementById('t-table').style.display='none';
+    document.getElementById('t-pagination').style.display='none';
+    return;
+  }
   document.getElementById('t-table').style.display='table';
-  document.getElementById('t-body').innerHTML = list.map(t => {
+  document.getElementById('t-empty').style.display='none';
+  document.getElementById('t-body').innerHTML = page.map(t => {
     const queued_badge = t.queued ? `<span class="badge b-queued" style="margin-left:4px">📬 file</span>` : '';
     return `<tr>
       <td><span class="tref">${t.ticket_ref}</span>${queued_badge}</td>
-      <td><div style="font-weight:500">${t.client_name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${t.client_whatsapp.replace('whatsapp:','')}</div></td>
+      <td><div style="font-weight:500">${t.client_name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${(t.client_whatsapp||'').replace('whatsapp:','')}</div></td>
       <td>${t.category}</td>
       <td><span class="badge b-${t.priority}">${t.priority}</span></td>
       <td><span class="badge b-${t.status}"><span class="dot d-${t.status}"></span> ${statusLabel(t.status)}</span></td>
@@ -533,16 +567,54 @@ function renderTickets(list) {
       </div></td>
     </tr>`;
   }).join('');
+  renderPagination(total, totalPages);
+}
+
+function renderPagination(total, totalPages) {
+  const pg = document.getElementById('t-pagination');
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end = Math.min(currentPage * PAGE_SIZE, total);
+  document.getElementById('pg-info').textContent = `${start}–${end} sur ${total} ticket${total > 1 ? 's' : ''}`;
+  let html = `<button class="pgb" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="pgb${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<span style="color:var(--muted);padding:0 3px">…</span>`;
+    }
+  }
+  html += `<button class="pgb" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  document.getElementById('pg-btns').innerHTML = html;
+  pg.style.display = 'flex';
+}
+
+function goPage(p) {
+  const totalPages = Math.ceil(filteredTickets.length / PAGE_SIZE);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderTickets(filteredTickets);
 }
 
 function filterBy(f, el) {
   document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active')); el.classList.add('active');
+  currentFilter = f;
+  currentPage = 1;
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = (document.getElementById('client-search')?.value || '').toLowerCase().trim();
   let list = allTickets;
-  if (f==='open') list=allTickets.filter(t=>t.status==='open');
-  else if (f==='in_progress') list=allTickets.filter(t=>t.status==='in_progress');
-  else if (f==='closed') list=allTickets.filter(t=>t.status==='closed');
-  else if (f==='high') list=allTickets.filter(t=>t.priority==='high'&&t.status!=='closed');
-  renderTickets(list);
+  if (currentFilter === 'open') list = list.filter(t => t.status === 'open');
+  else if (currentFilter === 'in_progress') list = list.filter(t => t.status === 'in_progress');
+  else if (currentFilter === 'closed') list = list.filter(t => t.status === 'closed');
+  else if (currentFilter === 'high') list = list.filter(t => t.priority === 'high' && t.status !== 'closed');
+  if (search) list = list.filter(t =>
+    (t.client_name || '').toLowerCase().includes(search) ||
+    (t.client_whatsapp || '').toLowerCase().includes(search)
+  );
+  filteredTickets = list;
+  renderTickets(filteredTickets);
 }
 
 // ── Queue ─────────────────────────────────────────────────────────────────────
@@ -665,6 +737,11 @@ async function loadAgents() {
           <option value="busy"${a.status==='busy'?' selected':''}>🟡 Occupé</option>
           <option value="absent"${a.status==='absent'?' selected':''}>🔴 Absent</option>
         </select>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;font-family:var(--mono)">
+          <span style="color:var(--muted)">TELEGRAM ID: </span>
+          ${a.telegram_chat_id ? `<span style="color:var(--blue)">${a.telegram_chat_id}</span>` : '<span style="color:var(--red)">⚠ Non configuré</span>'}
+          <button onclick="editTelegramId(${a.id},'${a.telegram_chat_id||''}')" style="float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px">✏</button>
+        </div>
       </div>`;
     }).join('')}`;
 }
@@ -677,12 +754,13 @@ async function setAgentStatus(agentId, status) {
 
 // ── QR ────────────────────────────────────────────────────────────────────────
 async function loadQR() {
-  const fallback='https://wa.me/14155238886?text=Bonjour%2C+je+souhaite+cr%C3%A9er+une+demande+de+support.';
-  let url=fallback;
-  try { const r=await api('/qr-info'); if(r&&r.ok){const d=await r.json();url=d.qr_data;} } catch(e){}
+  let url='';
+  try { const r=await api('/qr-info'); if(r&&r.ok){const d=await r.json();url=d.qr_data||'';} } catch(e){}
+  const lk=document.getElementById('wa-link');
+  if (!url) { lk.href='#'; lk.textContent='⚠ TELEGRAM_BOT_USERNAME non configuré'; return; }
   document.getElementById('qrcode').innerHTML='';
   new QRCode(document.getElementById('qrcode'),{text:url,width:192,height:192,colorDark:'#25d366',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
-  const lk=document.getElementById('wa-link'); lk.href=url; lk.textContent=url;
+  lk.href=url; lk.textContent=url;
 }
 function dlQR(){const c=document.querySelector('#qrcode canvas');if(!c)return toast('QR Code pas encore prêt','error');const a=document.createElement('a');a.download='qr-support.png';a.href=c.toDataURL();a.click();toast('✅ QR Code téléchargé','success');}
 
@@ -698,7 +776,7 @@ function buildProfile() {
   roleEl.className='pf-role '+currentUser.role;
   document.getElementById('pf-info-block').innerHTML=`
     <div class="dr"><div class="dl">EMAIL</div><div class="dv">${currentUser.email}</div></div>
-    <div class="dr"><div class="dl">WHATSAPP</div><div class="dv" style="font-family:var(--mono);font-size:12px">${currentUser.whatsapp_number.replace('whatsapp:','')}</div></div>
+    <div class="dr"><div class="dl">TELEGRAM ID</div><div class="dv" style="font-family:var(--mono);font-size:12px">${currentUser.telegram_chat_id || '— non configuré'}</div></div>
   `;
   if (currentUser.role !== 'admin') {
     document.getElementById('avail-card').style.display='block';
@@ -727,6 +805,52 @@ async function changePassword() {
   if (np!==cp) return toast('Les mots de passe ne correspondent pas','error');
   const r=await api(`/agents/${currentUser.id}/password`,{method:'PUT',body:JSON.stringify({new_password:np})});
   if(r&&r.ok){toast('✅ Mot de passe mis à jour','success');document.getElementById('pw-new').value='';document.getElementById('pw-conf').value='';}
+  else toast('❌ Erreur','error');
+}
+
+// ── Agent creation ────────────────────────────────────────────────────────────
+function openCreateAgent() {
+  document.getElementById('m-title').textContent = 'Créer un agent';
+  document.getElementById('m-body').innerHTML = `
+    <div class="field"><label>Nom complet</label><input type="text" id="ca-name" placeholder="Prénom Nom"></div>
+    <div class="field"><label>Email</label><input type="email" id="ca-email" placeholder="agent@example.com"></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="ca-pwd" placeholder="Minimum 8 caractères"></div>
+    <div class="field"><label>Telegram Chat ID</label><input type="text" id="ca-tgid" placeholder="Ex: 123456789"></div>
+    <div class="field"><label>Rôle</label><select id="ca-role" style="width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px">
+      <option value="agent">🎧 Agent support</option>
+      <option value="admin">👑 Administrateur</option>
+    </select></div>
+    <div class="field"><label>Max tickets simultanés</label><input type="number" id="ca-max" value="5" min="1" max="20"></div>
+  `;
+  document.getElementById('m-actions').innerHTML = `
+    <button class="btn btn-primary" onclick="submitCreateAgent()">✅ Créer l'agent</button>
+    <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+  `;
+  document.getElementById('modal').style.display='flex';
+}
+
+async function submitCreateAgent() {
+  const name=document.getElementById('ca-name').value.trim();
+  const email=document.getElementById('ca-email').value.trim();
+  const pwd=document.getElementById('ca-pwd').value;
+  const tgid=document.getElementById('ca-tgid').value.trim();
+  const role=document.getElementById('ca-role').value;
+  const max=parseInt(document.getElementById('ca-max').value)||5;
+  if (!name||!email||!pwd) return toast('Nom, email et mot de passe requis','error');
+  if (pwd.length<8) return toast('Mot de passe trop court (8 car. min)','error');
+  const body={name,email,password:pwd,role,max_tickets:max};
+  if (tgid) body.telegram_chat_id=tgid;
+  const r=await api('/agents',{method:'POST',body:JSON.stringify(body)});
+  if (!r) return;
+  if (r.ok) { toast('✅ Agent créé avec succès','success'); closeModal(); loadAgents(); }
+  else { const d=await r.json(); toast('❌ '+(d.error||'Erreur'),'error'); }
+}
+
+async function editTelegramId(agentId, current) {
+  const val = prompt('Telegram Chat ID de l\'agent :', current);
+  if (val === null) return;
+  const r=await api(`/agents/${agentId}/schedule`,{method:'PUT',body:JSON.stringify({telegram_chat_id:val.trim()})});
+  if (r&&r.ok) { toast('✅ Telegram ID mis à jour','success'); loadAgents(); }
   else toast('❌ Erreur','error');
 }
 
