@@ -1,0 +1,13 @@
+flask==3.0.3
+flask-sqlalchemy==3.1.1
+flask-cors==4.0.1
+psycopg2-binary==2.9.9
+twilio==9.2.3
+gunicorn==22.0.0
+python-dotenv==1.0.1
+APScheduler==3.10.4
+qrcode[pil]==7.4.2
+Pillow==10.3.0
+PyJWT==2.8.0
+werkzeug==3.0.3
+pytz==2024.1

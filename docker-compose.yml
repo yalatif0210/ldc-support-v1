@@ -1,0 +1,90 @@
+version: '3.9'
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WhatsApp Support Bot — Stack simplifiée (cohabitation avec LDC)
+#
+# ⚠️  PAS de Nginx ici — on utilise celui de ldc_frontend
+#
+# Le conteneur support_bot rejoint le réseau LDC pour être visible
+# par le Nginx de ldc_frontend qui proxy /support/ et /webhook/whatsapp
+#
+# Avant de lancer :
+#   1. Vérifier le nom du réseau LDC : docker network ls | grep default
+#   2. Adapter la valeur name: sous ldc_network si nécessaire
+#   3. cp .env.example .env && remplir les valeurs
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── Base de données PostgreSQL ──────────────────────────────────────────────
+  support_db:
+    image: postgres:16-alpine
+    container_name: support_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-support_db}
+      POSTGRES_USER: ${POSTGRES_USER:-support_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-support_pass}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - internal                # Réseau privé — db inaccessible de l'extérieur
+      - default
+      - shared_db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-support_user} -d ${POSTGRES_DB:-support_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Application Flask ───────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: support_bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-support_user}:${POSTGRES_PASSWORD:-support_pass}@support_db:5432/${POSTGRES_DB:-support_db}
+    expose:
+      - "5000"                  # Pas de port publié — accessible uniquement via Nginx LDC
+    volumes:
+      - qr_codes:/app/qr_codes
+    networks:
+      - internal                # Pour parler à sa propre DB
+      - ldc_network             # Pour être visible par le Nginx de ldc_frontend
+      - default             
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# ── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  qr_codes:
+    driver: local
+
+# ── Réseaux ──────────────────────────────────────────────────────────────────
+networks:
+  internal:
+    driver: bridge
+    internal: true              # DB isolée d'internet
+
+  ldc_network:
+    external: true              # Réseau existant du projet LDC
+    name: ldc_prod_default  
+
+  default:
+  shared_db_net:
+    external: true  # docker network create shared_db_net  +  docker network connect shared_db_net pgadmin

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#0c0e13;--surface:#13161f;--surface2:#1a1f2e;--border:#252a3a;
+  --accent:#25d366;--accent2:#1aab52;--red:#ff4757;--orange:#ffa502;
+  --blue:#3d9cf5;--purple:#a78bfa;--text:#e2e8f0;--muted:#5a6380;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 30% 40%,rgba(37,211,102,.06) 0%,transparent 60%),
+             radial-gradient(ellipse at 70% 80%,rgba(61,156,245,.05) 0%,transparent 60%),var(--bg);}
+.login-box{width:420px;padding:48px 40px;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 80px rgba(0,0,0,.5);animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;}
+.ldot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:glow 2s ease-in-out infinite;}
+@keyframes glow{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 18px var(--accent)}}
+.login-title{font-size:24px;font-weight:600;margin-bottom:6px;}
+.login-sub{font-size:14px;color:var(--muted);margin-bottom:32px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+.field input{width:100%;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;transition:border-color .2s;outline:none;}
+.field input:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--sans);transition:all .15s;margin-top:8px;}
+.btn-login:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-login:disabled{opacity:.5;cursor:default;transform:none;}
+.login-error{color:var(--red);font-size:13px;margin-top:12px;text-align:center;min-height:20px;}
+.demo-accounts{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);}
+.demo-title{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.demo-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent;}
+.demo-row:hover{background:var(--surface2);border-color:var(--border);}
+.drole{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;}
+.drole.admin{background:rgba(167,139,250,.15);color:var(--purple);}
+.drole.agent{background:rgba(37,211,102,.1);color:var(--accent);}
+
+/* APP */
+#app{display:none;grid-template-columns:240px 1fr;min-height:100vh;}
+#app.visible{display:grid;}
+
+/* Sidebar */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh;}
+.s-logo{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;padding:0 8px 20px;border-bottom:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.nav{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--muted);transition:all .15s;border:1px solid transparent;}
+.nav:hover{color:var(--text);background:var(--surface2);}
+.nav.active{color:var(--accent);background:rgba(37,211,102,.08);border-color:rgba(37,211,102,.18);}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.admin-badge{font-size:9px;font-family:var(--mono);background:rgba(167,139,250,.15);color:var(--purple);padding:2px 6px;border-radius:4px;margin-left:auto;}
+.queue-badge{font-size:9px;font-family:var(--mono);background:rgba(255,71,87,.15);color:var(--red);padding:2px 6px;border-radius:4px;margin-left:auto;display:none;}
+
+/* Status toggle in sidebar */
+.status-toggle{padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-top:4px;}
+.st-label{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+.st-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.stb{padding:6px 4px;border-radius:6px;border:1px solid var(--border);background:transparent;font-size:11px;font-family:var(--mono);cursor:pointer;transition:all .15s;color:var(--muted);text-align:center;}
+.stb:hover{border-color:rgba(255,255,255,.15);color:var(--text);}
+.stb.active-available{border-color:var(--accent);color:var(--accent);background:rgba(37,211,102,.1);}
+.stb.active-busy{border-color:var(--orange);color:var(--orange);background:rgba(255,165,2,.1);}
+.stb.active-absent{border-color:var(--red);color:var(--red);background:rgba(255,71,87,.1);}
+
+.s-user{padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-top:auto;}
+.s-user-name{font-weight:600;font-size:13px;margin-bottom:2px;}
+.s-user-role{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.s-logout{width:100%;padding:8px;background:none;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:12px;cursor:pointer;margin-top:8px;transition:all .15s;font-family:var(--sans);}
+.s-logout:hover{border-color:var(--red);color:var(--red);}
+
+/* Main */
+.main{padding:32px;overflow-y:auto;}
+.page{display:none;animation:fadeUp .2s ease;}
+.page.active{display:block;}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.ph h1{font-family:var(--mono);font-size:20px;font-weight:700;}
+.ph h1 span{color:var(--accent);}
+
+/* Buttons */
+.btn{padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-danger{background:rgba(255,71,87,.12);color:var(--red);border:1px solid rgba(255,71,87,.25);}
+.btn-danger:hover{background:rgba(255,71,87,.22);}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-blue{background:rgba(61,156,245,.12);color:var(--blue);border:1px solid rgba(61,156,245,.25);}
+.btn-blue:hover{background:rgba(61,156,245,.22);}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.g::after{background:var(--accent);}
+.stat.b::after{background:var(--blue);}
+.stat.o::after{background:var(--orange);}
+.stat.r::after{background:var(--red);}
+.stat.p::after{background:var(--purple);}
+.stat-l{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;}
+.stat-v{font-size:30px;font-family:var(--mono);font-weight:700;line-height:1;}
+.stat.g .stat-v{color:var(--accent);}
+.stat.b .stat-v{color:var(--blue);}
+.stat.o .stat-v{color:var(--orange);}
+.stat.r .stat-v{color:var(--red);}
+.stat.p .stat-v{color:var(--purple);}
+
+/* Filters */
+.filters{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;}
+.fb{padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .15s;}
+.fb:hover,.fb.active{border-color:var(--accent);color:var(--accent);background:rgba(37,211,102,.06);}
+
+/* Table */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface2);}
+th{padding:11px 14px;text-align:left;font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(37,42,58,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.015);}
+.tref{font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(37,211,102,.08);padding:3px 8px;border-radius:4px;white-space:nowrap;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+.b-open{background:rgba(61,156,245,.12);color:var(--blue);}
+.b-in_progress{background:rgba(255,165,2,.12);color:var(--orange);}
+.b-closed{background:rgba(37,211,102,.1);color:var(--accent);}
+.b-high{background:rgba(255,71,87,.12);color:var(--red);}
+.b-medium{background:rgba(255,165,2,.1);color:var(--orange);}
+.b-low{background:rgba(37,211,102,.1);color:var(--accent);}
+.b-queued{background:rgba(167,139,250,.12);color:var(--purple);}
+.dot{width:5px;height:5px;border-radius:50%;display:inline-block;}
+.d-open{background:var(--blue);}
+.d-in_progress{background:var(--orange);animation:glow 1.5s infinite;}
+.d-closed{background:var(--accent);}
+.loading{display:flex;align-items:center;justify-content:center;padding:56px;color:var(--muted);font-family:var(--mono);font-size:13px;gap:10px;}
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:56px 20px;color:var(--muted);font-family:var(--mono);font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+
+/* Agents grid */
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.ac{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .2s;}
+.ac:hover{border-color:rgba(255,255,255,.08);}
+.av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#000;margin-bottom:12px;}
+.an{font-weight:600;font-size:14px;margin-bottom:3px;}
+.ae{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:10px;}
+
+/* Availability indicators on agent card */
+.avail-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.avail-chip{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:4px;border:1px solid;}
+.chip-available{background:rgba(37,211,102,.1);color:var(--accent);border-color:rgba(37,211,102,.3);}
+.chip-busy{background:rgba(255,165,2,.1);color:var(--orange);border-color:rgba(255,165,2,.3);}
+.chip-absent{background:rgba(255,71,87,.1);color:var(--red);border-color:rgba(255,71,87,.3);}
+.chip-schedule-ok{background:rgba(61,156,245,.08);color:var(--blue);border-color:rgba(61,156,245,.2);}
+.chip-schedule-off{background:rgba(90,99,128,.08);color:var(--muted);border-color:var(--border);}
+.chip-full{background:rgba(255,71,87,.08);color:var(--red);border-color:rgba(255,71,87,.2);}
+
+.agent-load{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin-bottom:10px;}
+.agent-load-bar{height:100%;border-radius:2px;transition:width .3s;}
+
+/* Status select for admin */
+.status-select{padding:5px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;cursor:pointer;width:100%;}
+
+/* QR */
+.qr-grid{display:grid;grid-template-columns:360px 1fr;gap:22px;align-items:start;}
+.qr-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px;text-align:center;}
+.qr-card h3{font-family:var(--mono);font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:22px;}
+#qrcode{display:inline-block;padding:14px;background:white;border-radius:10px;margin-bottom:18px;}
+.qr-link{font-family:var(--mono);font-size:10px;color:var(--accent);word-break:break-all;background:rgba(37,211,102,.06);padding:10px;border-radius:8px;border:1px solid rgba(37,211,102,.15);margin-bottom:14px;display:block;text-decoration:none;}
+.qr-info{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;}
+.qr-info h3{font-family:var(--mono);font-size:15px;margin-bottom:18px;}
+.steps{list-style:none;display:flex;flex-direction:column;gap:14px;}
+.step{display:flex;gap:12px;align-items:flex-start;}
+.sn{width:26px;height:26px;border-radius:50%;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.st{font-size:13px;line-height:1.55;}
+.st strong{color:var(--accent);}
+.warn{background:rgba(255,165,2,.07);border:1px solid rgba(255,165,2,.2);border-radius:8px;padding:13px;margin-top:16px;}
+.warn-t{font-family:var(--mono);font-size:10px;color:var(--orange);margin-bottom:5px;}
+.warn-b{font-size:12px;color:var(--text);line-height:1.6;}
+hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
+
+/* Profile */
+.profile-card{max-width:480px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:30px;}
+.pf-head{display:flex;align-items:center;gap:16px;margin-bottom:24px;}
+.pf-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#000;}
+.pf-name{font-size:18px;font-weight:600;}
+.pf-role{font-size:12px;font-family:var(--mono);margin-top:3px;}
+.pf-role.admin{color:var(--purple);}
+.pf-role.agent{color:var(--accent);}
+
+/* Availability status card on profile */
+.avail-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;}
+.avail-title{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px;}
+.avail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.avail-item{background:var(--surface);border-radius:8px;padding:10px;}
+.avail-item-label{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;}
+.avail-item-val{font-size:13px;font-weight:500;}
+.status-btns-large{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.slb{padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;font-size:13px;cursor:pointer;transition:all .15s;color:var(--muted);font-family:var(--sans);font-weight:500;}
+.slb:hover{border-color:rgba(255,255,255,.15);}
+.slb.active-available{border-color:var(--accent);color:var(--accent);background:rgba(37,211,102,.1);}
+.slb.active-busy{border-color:var(--orange);color:var(--orange);background:rgba(255,165,2,.1);}
+.slb.active-absent{border-color:var(--red);color:var(--red);background:rgba(255,71,87,.1);}
+
+/* Modal */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
+.mo.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;width:500px;max-width:95vw;animation:fadeUp .2s ease;}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.mt{font-family:var(--mono);font-size:15px;}
+.mc{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;}
+.mc:hover{color:var(--text);}
+.dr{display:flex;gap:12px;margin-bottom:11px;}
+.dl{font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--muted);width:90px;padding-top:2px;flex-shrink:0;}
+.dv{font-size:13px;line-height:1.55;flex:1;}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:13px;display:flex;align-items:center;gap:8px;z-index:200;transform:translateY(80px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-color:rgba(37,211,102,.4);color:var(--accent);}
+.toast.error{border-color:rgba(255,71,87,.4);color:var(--red);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><span class="ldot"></span> SUPPORT BOT</div>
+    <div class="login-title">Connexion</div>
+    <div class="login-sub">Accédez à votre espace de gestion des tickets.</div>
+    <div class="field"><label>Email</label><input type="email" id="l-email" placeholder="votre@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="field"><label>Mot de passe</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" id="l-btn" onclick="doLogin()">Se connecter →</button>
+    <div class="login-error" id="l-err"></div>
+    <div class="demo-accounts">
+      <div class="demo-title">Comptes de démonstration</div>
+      <div class="demo-row" onclick="fillDemo('admin@support.com','Admin1234!')">
+        <div><div style="font-size:13px;font-weight:500">Admin Système</div><div style="font-size:12px;color:var(--muted)">admin@support.com</div></div>
+        <span class="drole admin">ADMIN</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('alice@support.com','Alice1234!')">
+        <div><div style="font-size:13px;font-weight:500">Alice Dupont</div><div style="font-size:12px;color:var(--muted)">alice@support.com</div></div>
+        <span class="drole agent">AGENT</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="s-logo"><span class="ldot"></span> SUPPORT BOT</div>
+    <div class="nav active" id="nav-tickets" onclick="showPage('tickets',this)"><span class="nav-icon">🎫</span> Tickets</div>
+    <div class="nav" id="nav-queue" onclick="showPage('queue',this)" style="display:none"><span class="nav-icon">📬</span> File d'attente <span class="queue-badge" id="queue-badge">0</span></div>
+    <div class="nav" id="nav-agents" onclick="showPage('agents',this)" style="display:none"><span class="nav-icon">👥</span> Agents <span class="admin-badge">ADMIN</span></div>
+    <div class="nav" id="nav-qr" onclick="showPage('qr',this)"><span class="nav-icon">📱</span> Accès Bot</div>
+    <div class="nav" id="nav-profile" onclick="showPage('profile',this)"><span class="nav-icon">⚙️</span> Mon profil</div>
+
+    <!-- Status toggle (agents seulement) -->
+    <div class="status-toggle" id="status-toggle" style="display:none">
+      <div class="st-label">Mon statut</div>
+      <div class="st-btns">
+        <button class="stb" id="stb-available" onclick="setMyStatus('available')">🟢 Dispo</button>
+        <button class="stb" id="stb-busy" onclick="setMyStatus('busy')">🟡 Occupé</button>
+        <button class="stb" id="stb-absent" onclick="setMyStatus('absent')">🔴 Absent</button>
+      </div>
+    </div>
+
+    <div class="s-user" id="s-user">
+      <div class="s-user-name" id="s-name">—</div>
+      <div class="s-user-role" id="s-role">—</div>
+      <button class="s-logout" onclick="logout()">↩ Déconnexion</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- TICKETS -->
+    <div class="page active" id="page-tickets">
+      <div class="ph"><h1>Tickets <span id="tickets-scope"></span></h1><button class="btn btn-ghost" onclick="loadAll()">↻ Actualiser</button></div>
+      <div class="stats" id="stats-grid">
+        <div class="stat g"><div class="stat-l">Total</div><div class="stat-v" id="s-total">—</div></div>
+        <div class="stat b"><div class="stat-l">Ouverts</div><div class="stat-v" id="s-open">—</div></div>
+        <div class="stat o"><div class="stat-l">En cours</div><div class="stat-v" id="s-prog">—</div></div>
+        <div class="stat r"><div class="stat-l">Priorité haute</div><div class="stat-v" id="s-high">—</div></div>
+        <div class="stat p" id="stat-queued-card" style="display:none"><div class="stat-l">En attente</div><div class="stat-v" id="s-queued">—</div></div>
+      </div>
+      <div class="filters">
+        <button class="fb active" onclick="filterBy('all',this)">Tous</button>
+        <button class="fb" onclick="filterBy('open',this)">🟡 Ouverts</button>
+        <button class="fb" onclick="filterBy('in_progress',this)">🔵 En cours</button>
+        <button class="fb" onclick="filterBy('closed',this)">✅ Fermés</button>
+        <button class="fb" onclick="filterBy('high',this)">🔴 Haute priorité</button>
+      </div>
+      <div class="tw">
+        <div id="t-loading" class="loading"><div class="spinner"></div> Chargement...</div>
+        <table id="t-table" style="display:none">
+          <thead><tr><th>Référence</th><th>Client</th><th>Catégorie</th><th>Priorité</th><th>Statut</th><th>Agent</th><th>Relances</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="t-body"></tbody>
+        </table>
+        <div id="t-empty" class="empty" style="display:none"><div class="empty-icon">🎫</div>Aucun ticket trouvé</div>
+      </div>
+    </div>
+
+    <!-- FILE D'ATTENTE (admin) -->
+    <div class="page" id="page-queue">
+      <div class="ph"><h1>File <span>d'attente</span></h1><button class="btn btn-ghost" onclick="loadQueue()">↻ Actualiser</button></div>
+      <div class="tw">
+        <div id="q-loading" class="loading"><div class="spinner"></div> Chargement...</div>
+        <table id="q-table" style="display:none">
+          <thead><tr><th>Référence</th><th>Client</th><th>Catégorie</th><th>Priorité</th><th>Attente</th><th>Description</th></tr></thead>
+          <tbody id="q-body"></tbody>
+        </table>
+        <div id="q-empty" class="empty" style="display:none"><div class="empty-icon">📭</div>Aucun ticket en file d'attente ✅</div>
+      </div>
+    </div>
+
+    <!-- AGENTS (admin) -->
+    <div class="page" id="page-agents">
+      <div class="ph"><h1>Agents <span>& disponibilité</span></h1></div>
+      <div class="ag" id="agents-grid"><div class="loading"><div class="spinner"></div> Chargement...</div></div>
+    </div>
+
+    <!-- QR CODE -->
+    <div class="page" id="page-qr">
+      <div class="ph"><h1>Accès <span>Bot WhatsApp</span></h1></div>
+      <div class="qr-grid">
+        <div class="qr-card">
+          <h3>📱 QR Code d'accès</h3>
+          <div id="qrcode"></div>
+          <a id="wa-link" href="#" target="_blank" class="qr-link">Chargement...</a>
+          <button class="btn btn-primary" style="width:100%" onclick="dlQR()">⬇ Télécharger</button>
+        </div>
+        <div class="qr-info">
+          <h3>Comment le client accède au bot ?</h3>
+          <ul class="steps">
+            <li class="step"><div class="sn">1</div><div class="st">Le client <strong>scanne ce QR code</strong> ou clique sur le lien partagé.</div></li>
+            <li class="step"><div class="sn">2</div><div class="st">WhatsApp s'ouvre avec un <strong>message pré-rempli</strong>.</div></li>
+            <li class="step"><div class="sn">3</div><div class="st">Le bot guide en <strong>5 étapes</strong> guidées.</div></li>
+            <li class="step"><div class="sn">4</div><div class="st">Si un agent est disponible → <strong>assignation immédiate</strong> + notification client.</div></li>
+            <li class="step"><div class="sn">5</div><div class="st">Sinon → ticket en <strong>file d'attente</strong>, client notifié à la prise en charge.</div></li>
+          </ul>
+          <hr class="sep">
+          <div class="warn"><div class="warn-t">⚠ SANDBOX TWILIO</div><div class="warn-b">En mode test, chaque client doit d'abord envoyer le code de jonction Twilio. Cette étape disparaît avec un numéro WhatsApp Business approuvé.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="ph"><h1>Mon <span>profil</span></h1></div>
+      <div class="profile-card">
+        <div class="pf-head">
+          <div class="pf-av" id="pf-av"></div>
+          <div><div class="pf-name" id="pf-name">—</div><div class="pf-role" id="pf-role">—</div></div>
+        </div>
+
+        <!-- Availability card (agents only) -->
+        <div class="avail-card" id="avail-card" style="display:none">
+          <div class="avail-title">Ma disponibilité</div>
+          <div class="avail-grid">
+            <div class="avail-item"><div class="avail-item-label">STATUT MANUEL</div><div class="avail-item-val" id="pf-status">—</div></div>
+            <div class="avail-item"><div class="avail-item-label">HORAIRES</div><div class="avail-item-val" id="pf-schedule">—</div></div>
+            <div class="avail-item"><div class="avail-item-label">CHARGE</div><div class="avail-item-val" id="pf-load">—</div></div>
+            <div class="avail-item"><div class="avail-item-label">ASSIGNABLE</div><div class="avail-item-val" id="pf-assignable">—</div></div>
+          </div>
+          <div style="margin-bottom:8px;font-size:12px;color:var(--muted)">Changer mon statut :</div>
+          <div class="status-btns-large">
+            <button class="slb" id="slb-available" onclick="setMyStatus('available')">🟢 Disponible</button>
+            <button class="slb" id="slb-busy" onclick="setMyStatus('busy')">🟡 Occupé</button>
+            <button class="slb" id="slb-absent" onclick="setMyStatus('absent')">🔴 Absent</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px" id="pf-info-block"></div>
+        <div style="border-top:1px solid var(--border);padding-top:20px">
+          <div style="font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;letter-spacing:1px">Changer le mot de passe</div>
+          <div class="field"><label>Nouveau mot de passe</label><input type="password" id="pw-new" placeholder="Minimum 8 caractères"></div>
+          <div class="field"><label>Confirmer</label><input type="password" id="pw-conf" placeholder="Répéter"></div>
+          <button class="btn btn-primary" onclick="changePassword()">💾 Mettre à jour</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Modal -->
+<div class="mo" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal">
+    <div class="mh"><span class="mt" id="m-title">—</span><button class="mc" onclick="closeModal()">✕</button></div>
+    <div id="m-body"></div>
+    <div style="display:flex;gap:10px;margin-top:18px" id="m-actions"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/support/api';
+let token = localStorage.getItem('sb_token');
+let currentUser = JSON.parse(localStorage.getItem('sb_user') || 'null');
+let allTickets = [];
+
+const COLORS = ['#25d366','#3d9cf5','#ffa502','#ff4757','#a78bfa','#38bdf8','#f97316'];
+const avatarColor = n => COLORS[n.charCodeAt(0) % COLORS.length];
+const initials = n => n.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
+const statusLabel = s => ({open:'Ouvert',in_progress:'En cours',closed:'Fermé'}[s]||s);
+const fmtDate = iso => new Date(iso).toLocaleString('fr',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const waitMin = iso => Math.round((Date.now()-new Date(iso))/60000);
+
+window.onload = () => { if (token && currentUser) bootApp(); };
+
+function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('s-name').textContent = currentUser.name;
+  document.getElementById('s-role').textContent = currentUser.role==='admin' ? '👑 Administrateur' : '🎧 Agent support';
+  document.getElementById('tickets-scope').textContent = currentUser.role==='admin' ? '(tous)' : '(mes tickets)';
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('nav-agents').style.display = 'flex';
+    document.getElementById('nav-queue').style.display = 'flex';
+    document.getElementById('stat-queued-card').style.display = 'block';
+    document.getElementById('queue-badge').style.display = 'block';
+  }
+
+  if (currentUser.role !== 'admin') {
+    document.getElementById('status-toggle').style.display = 'block';
+  }
+
+  buildProfile();
+  loadAll();
+  loadQR();
+  setInterval(loadAll, 60000);
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+function fillDemo(e, p) { document.getElementById('l-email').value=e; document.getElementById('l-pass').value=p; document.getElementById('l-err').textContent=''; }
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const btn = document.getElementById('l-btn');
+  if (!email||!pass) { document.getElementById('l-err').textContent='Remplissez tous les champs.'; return; }
+  btn.disabled=true; btn.textContent='Connexion...';
+  try {
+    const r = await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error||'Erreur');
+    token=d.token; currentUser=d.agent;
+    localStorage.setItem('sb_token',token); localStorage.setItem('sb_user',JSON.stringify(currentUser));
+    bootApp();
+  } catch(e) { document.getElementById('l-err').textContent=e.message; btn.disabled=false; btn.textContent='Se connecter →'; }
+}
+
+function logout() { token=null; currentUser=null; localStorage.removeItem('sb_token'); localStorage.removeItem('sb_user'); location.reload(); }
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function api(path, opts={}) {
+  const r = await fetch(`${API}${path}`,{...opts,headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json',...(opts.headers||{})}});
+  if (r.status===401) { logout(); return null; }
+  return r;
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav').forEach(n=>n.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name==='agents') loadAgents();
+  if (name==='queue') loadQueue();
+  if (name==='profile') refreshProfile();
+}
+
+// ── Stats & Tickets ───────────────────────────────────────────────────────────
+async function loadAll() { await Promise.all([loadStats(), loadTickets()]); }
+
+async function loadStats() {
+  const r = await api('/stats'); if(!r) return;
+  const d = await r.json();
+  document.getElementById('s-total').textContent = d.total;
+  document.getElementById('s-open').textContent = d.open;
+  document.getElementById('s-prog').textContent = d.in_progress;
+  document.getElementById('s-high').textContent = d.high_priority_open;
+  if (d.queued !== undefined) {
+    document.getElementById('s-queued').textContent = d.queued;
+    const badge = document.getElementById('queue-badge');
+    badge.textContent = d.queued;
+    badge.style.display = d.queued > 0 ? 'block' : 'none';
+  }
+}
+
+async function loadTickets() {
+  document.getElementById('t-loading').style.display='flex';
+  document.getElementById('t-table').style.display='none';
+  document.getElementById('t-empty').style.display='none';
+  const r = await api('/tickets'); if(!r) return;
+  allTickets = await r.json();
+  renderTickets(allTickets);
+  document.getElementById('t-loading').style.display='none';
+}
+
+function renderTickets(list) {
+  if (!list.length) { document.getElementById('t-empty').style.display='block'; document.getElementById('t-table').style.display='none'; return; }
+  document.getElementById('t-table').style.display='table';
+  document.getElementById('t-body').innerHTML = list.map(t => {
+    const queued_badge = t.queued ? `<span class="badge b-queued" style="margin-left:4px">📬 file</span>` : '';
+    return `<tr>
+      <td><span class="tref">${t.ticket_ref}</span>${queued_badge}</td>
+      <td><div style="font-weight:500">${t.client_name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${t.client_whatsapp.replace('whatsapp:','')}</div></td>
+      <td>${t.category}</td>
+      <td><span class="badge b-${t.priority}">${t.priority}</span></td>
+      <td><span class="badge b-${t.status}"><span class="dot d-${t.status}"></span> ${statusLabel(t.status)}</span></td>
+      <td style="font-size:13px">${t.agent?`<span style="display:flex;align-items:center;gap:6px"><span style="width:22px;height:22px;border-radius:50%;background:${avatarColor(t.agent.name)};display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#000">${initials(t.agent.name)}</span>${t.agent.name}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${t.reminder_count>0?`<span style="color:var(--orange)">⏰ ×${t.reminder_count}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${fmtDate(t.created_at)}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-ghost" style="padding:5px 9px;font-size:11px" onclick="viewTicket(${t.id})">👁</button>
+        ${t.status==='open'?`<button class="btn btn-blue" style="padding:5px 9px;font-size:11px" onclick="startTicket(${t.id},'${t.ticket_ref}')">▶</button>`:''}
+        ${t.status!=='closed'?`<button class="btn btn-danger" style="padding:5px 9px;font-size:11px" onclick="closeTicket(${t.id},'${t.ticket_ref}')">✓</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterBy(f, el) {
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active')); el.classList.add('active');
+  let list = allTickets;
+  if (f==='open') list=allTickets.filter(t=>t.status==='open');
+  else if (f==='in_progress') list=allTickets.filter(t=>t.status==='in_progress');
+  else if (f==='closed') list=allTickets.filter(t=>t.status==='closed');
+  else if (f==='high') list=allTickets.filter(t=>t.priority==='high'&&t.status!=='closed');
+  renderTickets(list);
+}
+
+// ── Queue ─────────────────────────────────────────────────────────────────────
+async function loadQueue() {
+  document.getElementById('q-loading').style.display='flex';
+  document.getElementById('q-table').style.display='none';
+  document.getElementById('q-empty').style.display='none';
+  const r = await api('/tickets/queue'); if(!r) return;
+  const list = await r.json();
+  document.getElementById('q-loading').style.display='none';
+  if (!list.length) { document.getElementById('q-empty').style.display='block'; return; }
+  document.getElementById('q-table').style.display='table';
+  document.getElementById('q-body').innerHTML = list.map(t => `<tr>
+    <td><span class="tref">${t.ticket_ref}</span></td>
+    <td><div style="font-weight:500">${t.client_name}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">${t.client_whatsapp.replace('whatsapp:','')}</div></td>
+    <td>${t.category}</td>
+    <td><span class="badge b-${t.priority}">${t.priority}</span></td>
+    <td style="font-family:var(--mono);font-size:12px;color:var(--orange)">⏱ ${waitMin(t.created_at)} min</td>
+    <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.description}</td>
+  </tr>`).join('');
+}
+
+// ── Ticket detail ─────────────────────────────────────────────────────────────
+function viewTicket(id) {
+  const t = allTickets.find(x=>x.id===id); if(!t) return;
+  document.getElementById('m-title').textContent = t.ticket_ref;
+  document.getElementById('m-body').innerHTML = `
+    ${t.queued?'<div style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--purple)">📬 Ce ticket est en file d\'attente — aucun agent disponible au moment de la création.</div>':''}
+    <div class="dr"><div class="dl">CLIENT</div><div class="dv">${t.client_name}</div></div>
+    <div class="dr"><div class="dl">WHATSAPP</div><div class="dv" style="font-family:var(--mono);font-size:11px">${t.client_whatsapp.replace('whatsapp:','')}</div></div>
+    <div class="dr"><div class="dl">CATÉGORIE</div><div class="dv">${t.category}</div></div>
+    <div class="dr"><div class="dl">PRIORITÉ</div><div class="dv"><span class="badge b-${t.priority}">${t.priority}</span></div></div>
+    <div class="dr"><div class="dl">STATUT</div><div class="dv"><span class="badge b-${t.status}">${statusLabel(t.status)}</span></div></div>
+    <div class="dr"><div class="dl">AGENT</div><div class="dv">${t.agent?t.agent.name:'—'}</div></div>
+    <hr class="sep" style="margin:12px 0">
+    <div class="dr"><div class="dl">DESCRIPTION</div><div class="dv" style="line-height:1.6">${t.description}</div></div>
+    <hr class="sep" style="margin:12px 0">
+    <div class="dr"><div class="dl">CRÉÉ LE</div><div class="dv" style="font-family:var(--mono);font-size:11px">${fmtDate(t.created_at)}</div></div>
+    ${t.closed_at?`<div class="dr"><div class="dl">FERMÉ LE</div><div class="dv" style="font-family:var(--mono);font-size:11px">${fmtDate(t.closed_at)}</div></div>`:''}
+  `;
+  document.getElementById('m-actions').innerHTML = t.status!=='closed'
+    ? `${t.status==='open'?`<button class="btn btn-blue" style="flex:1" onclick="startTicket(${t.id},'${t.ticket_ref}',true)">▶ Prendre en charge</button>`:''}
+       <button class="btn btn-danger" style="flex:1" onclick="closeTicket(${t.id},'${t.ticket_ref}',true)">✓ Fermer</button>`
+    : `<span style="color:var(--accent);font-family:var(--mono);font-size:12px">✅ Ticket résolu</span>`;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function startTicket(id, ref, fromModal=false) {
+  if (!confirm(`Notifier le client que le ticket ${ref} est en cours de traitement ?`)) return;
+  const r = await api(`/tickets/${id}/start`,{method:'PUT'}); if(!r) return;
+  if (r.ok) { toast(`🔵 Client notifié — ${ref} en cours`,'success'); if(fromModal) closeModal(); await loadAll(); }
+  else { const d=await r.json(); toast(d.error||'❌ Erreur','error'); }
+}
+
+async function closeTicket(id, ref, fromModal=false) {
+  if (!confirm(`Fermer le ticket ${ref} ?\n\nLe client sera notifié.`)) return;
+  const r = await api(`/tickets/${id}/close`,{method:'PUT'}); if(!r) return;
+  if (r.ok) { toast(`✅ Ticket ${ref} fermé`,'success'); if(fromModal) closeModal(); await loadAll(); }
+  else { const d=await r.json(); toast(d.error||'❌ Erreur','error'); }
+}
+
+// ── Agent Status ──────────────────────────────────────────────────────────────
+async function setMyStatus(status) {
+  const r = await api('/agents/me/status',{method:'PUT',body:JSON.stringify({status})}); if(!r) return;
+  if (r.ok) {
+    const d = await r.json();
+    currentUser = {...currentUser, status};
+    localStorage.setItem('sb_user', JSON.stringify(currentUser));
+    updateStatusButtons(status);
+    toast(`✅ Statut: ${status==='available'?'🟢 Disponible':status==='busy'?'🟡 Occupé':'🔴 Absent'}`,'success');
+    refreshProfile();
+  }
+}
+
+function updateStatusButtons(status) {
+  ['available','busy','absent'].forEach(s => {
+    const sb = document.getElementById(`stb-${s}`);
+    const slb = document.getElementById(`slb-${s}`);
+    if (sb) sb.className = `stb${status===s?' active-'+s:''}`;
+    if (slb) slb.className = `slb${status===s?' active-'+s:''}`;
+  });
+}
+
+// ── Agents ────────────────────────────────────────────────────────────────────
+async function loadAgents() {
+  const grid = document.getElementById('agents-grid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div> Chargement...</div>';
+  const r = await api('/agents'); if(!r) return;
+  const agents = await r.json();
+  const availCount = agents.filter(a=>a.is_truly_available).length;
+
+  grid.innerHTML = `
+    <div class="ac" style="background:var(--surface2);border-color:rgba(37,211,102,.2);grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:16px">
+      <div style="font-size:28px">🟢</div>
+      <div><div style="font-weight:600;font-size:15px">${availCount} agent${availCount>1?'s':''} vraiment disponible${availCount>1?'s':''}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Statut AVAILABLE + dans les horaires + capacité non atteinte</div></div>
+    </div>
+    ${agents.map(a => {
+      const col = avatarColor(a.name);
+      const loadPct = Math.round((a.current_ticket_count/Math.max(a.max_tickets,1))*100);
+      const loadColor = loadPct>=90?'var(--red)':loadPct>=60?'var(--orange)':'var(--accent)';
+      return `<div class="ac">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div class="av" style="background:${col};margin:0">${initials(a.name)}</div>
+          <div><div class="an" style="margin:0">${a.name}</div><div class="ae" style="margin:0">${a.email}</div></div>
+        </div>
+        <div class="avail-row">
+          <span class="avail-chip chip-${a.status}">${a.status==='available'?'🟢 Disponible':a.status==='busy'?'🟡 Occupé':'🔴 Absent'}</span>
+          <span class="avail-chip ${a.is_within_schedule?'chip-schedule-ok':'chip-schedule-off'}">${a.is_within_schedule?'🕐 En horaire':'🕐 Hors horaire'}</span>
+          ${!a.has_capacity?'<span class="avail-chip chip-full">⛔ Plein</span>':''}
+        </div>
+        <div class="agent-load"><div class="agent-load-bar" style="width:${loadPct}%;background:${loadColor}"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">
+          <span>${a.current_ticket_count}/${a.max_tickets} tickets</span>
+          <span>${a.is_truly_available?'✅ Assignable':'❌ Non assignable'}</span>
+        </div>
+        <select class="status-select" onchange="setAgentStatus(${a.id},this.value)">
+          <option value="available"${a.status==='available'?' selected':''}>🟢 Disponible</option>
+          <option value="busy"${a.status==='busy'?' selected':''}>🟡 Occupé</option>
+          <option value="absent"${a.status==='absent'?' selected':''}>🔴 Absent</option>
+        </select>
+      </div>`;
+    }).join('')}`;
+}
+
+async function setAgentStatus(agentId, status) {
+  const r = await api(`/agents/${agentId}/status`,{method:'PUT',body:JSON.stringify({status})}); if(!r) return;
+  if (r.ok) { toast('✅ Statut agent mis à jour','success'); loadAgents(); loadAll(); }
+  else toast('❌ Erreur','error');
+}
+
+// ── QR ────────────────────────────────────────────────────────────────────────
+async function loadQR() {
+  const fallback='https://wa.me/14155238886?text=Bonjour%2C+je+souhaite+cr%C3%A9er+une+demande+de+support.';
+  let url=fallback;
+  try { const r=await api('/qr-info'); if(r&&r.ok){const d=await r.json();url=d.qr_data;} } catch(e){}
+  document.getElementById('qrcode').innerHTML='';
+  new QRCode(document.getElementById('qrcode'),{text:url,width:192,height:192,colorDark:'#25d366',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  const lk=document.getElementById('wa-link'); lk.href=url; lk.textContent=url;
+}
+function dlQR(){const c=document.querySelector('#qrcode canvas');if(!c)return toast('QR Code pas encore prêt','error');const a=document.createElement('a');a.download='qr-support.png';a.href=c.toDataURL();a.click();toast('✅ QR Code téléchargé','success');}
+
+// ── Profile ───────────────────────────────────────────────────────────────────
+function buildProfile() {
+  if (!currentUser) return;
+  const col = avatarColor(currentUser.name);
+  document.getElementById('pf-av').style.background=col;
+  document.getElementById('pf-av').textContent=initials(currentUser.name);
+  document.getElementById('pf-name').textContent=currentUser.name;
+  const roleEl=document.getElementById('pf-role');
+  roleEl.textContent=currentUser.role==='admin'?'👑 Administrateur':'🎧 Agent support';
+  roleEl.className='pf-role '+currentUser.role;
+  document.getElementById('pf-info-block').innerHTML=`
+    <div class="dr"><div class="dl">EMAIL</div><div class="dv">${currentUser.email}</div></div>
+    <div class="dr"><div class="dl">WHATSAPP</div><div class="dv" style="font-family:var(--mono);font-size:12px">${currentUser.whatsapp_number.replace('whatsapp:','')}</div></div>
+  `;
+  if (currentUser.role !== 'admin') {
+    document.getElementById('avail-card').style.display='block';
+    updateStatusButtons(currentUser.status||'available');
+  }
+}
+
+async function refreshProfile() {
+  const r = await api('/auth/me'); if(!r) return;
+  const agent = await r.json();
+  currentUser = agent;
+  localStorage.setItem('sb_user', JSON.stringify(currentUser));
+  if (currentUser.role !== 'admin') {
+    document.getElementById('pf-status').textContent = currentUser.status==='available'?'🟢 Disponible':currentUser.status==='busy'?'🟡 Occupé':'🔴 Absent';
+    document.getElementById('pf-schedule').textContent = currentUser.is_within_schedule?'✅ En horaire':'⛔ Hors horaire';
+    document.getElementById('pf-load').textContent = `${currentUser.current_ticket_count}/${currentUser.max_tickets}`;
+    document.getElementById('pf-assignable').textContent = currentUser.is_truly_available?'✅ Oui':'❌ Non';
+    updateStatusButtons(currentUser.status);
+  }
+}
+
+async function changePassword() {
+  const np=document.getElementById('pw-new').value;
+  const cp=document.getElementById('pw-conf').value;
+  if (!np||np.length<8) return toast('Mot de passe trop court (8 car. min)','error');
+  if (np!==cp) return toast('Les mots de passe ne correspondent pas','error');
+  const r=await api(`/agents/${currentUser.id}/password`,{method:'PUT',body:JSON.stringify({new_password:np})});
+  if(r&&r.ok){toast('✅ Mot de passe mis à jour','success');document.getElementById('pw-new').value='';document.getElementById('pw-conf').value='';}
+  else toast('❌ Erreur','error');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+</script>
+</body>
+</html>

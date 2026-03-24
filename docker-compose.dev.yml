@@ -1,0 +1,27 @@
+version: '3.9'
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Override développement — remplace docker-compose.yml en local
+#
+# Usage : docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# Ou simplement : docker compose up -d  (si vous renommez ce fichier en docker-compose.override.yml)
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  db:
+    ports:
+      - "5432:5432"             # Expose PostgreSQL pour accès local (DBeaver, psql, etc.)
+
+  app:
+    ports:
+      - "5000:5000"             # Expose Flask directement
+    volumes:
+      - .:/app                  # Hot-reload : les modifications de code sont prises en compte sans rebuild
+    environment:
+      FLASK_DEBUG: "true"
+    command: python app.py      # Mode développement (pas Gunicorn)
+
+  nginx:
+    profiles:
+      - production              # Nginx désactivé en développement
